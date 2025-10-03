@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>小さな成功記録アプリ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        :root {
+            --accent: #7B61FF;
+            /* iOS風パープル */
+            --bg: #F2F2F7;
+            --card-bg: #fff;
+            --text-main: #000;
+            --text-sub: #666;
+            --radius: 14px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --content-width: 372px;
+            /* 内側は最大372px */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone {
+            background: var(--bg);
+            width: 402px;
+            height: 874px;
+            /* 外枠固定 */
+            border-radius: 36px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .4);
+            position: relative;
+            padding: 0 10px;
+            /* 内側余白 */
+        }
+
+        header {
+            height: 56px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--text-main);
+            background: var(--card-bg);
+            border-bottom: 1px solid #ddd;
+        }
+
+        main {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+            display: none;
+            width: 100%;
+        }
+
+        section .container {
+            width: var(--content-width);
+            margin: 0 auto;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        .today-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .today-date {
+            font-size: 14px;
+            color: var(--text-sub);
+            margin-bottom: 16px;
+        }
+
+        .input-wrap {
+            width: var(--content-width);
+        }
+
+        textarea {
+            width: var(--content-width);
+            height: 220px;
+            resize: none;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            padding: 14px;
+            font-size: 16px;
+            line-height: 1.5;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        textarea::placeholder {
+            color: #9aa;
+        }
+
+        .editor-toolbar {
+            width: var(--content-width);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0 0;
+        }
+
+        .mic-btn {
+            flex: 0 0 auto;
+            border: 1px solid #ddd;
+            background: var(--card-bg);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .mic-btn.active {
+            border-color: var(--accent);
+            color: #fff;
+            background: var(--accent);
+        }
+
+        .mic-status {
+            flex: 1 1 auto;
+            font-size: 13px;
+            color: var(--text-sub);
+            text-align: right;
+            min-height: 20px;
+        }
+
+        button.submit {
+            width: var(--content-width);
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .count-card {
+            width: var(--content-width);
+            background: var(--card-bg);
+            border: 1px solid #eee;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .count-title {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .count-number {
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+
+        .count-sub {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .count-message {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .month-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 10px 4px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+            width: var(--content-width);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .month-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .month-tab {
+            min-width: 100px;
+            text-align: center;
+            padding: 10px 8px;
+            border-radius: var(--radius);
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+            color: var(--text-main);
+            border: 1px solid #ddd;
+            transition: background .2s, color .2s;
+        }
+
+        .month-tab.active {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            border-color: var(--accent);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: var(--content-width);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        li {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border: 1px solid #eee;
+            word-break: break-word;
+        }
+
+        .date {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 6px;
+        }
+
+        .tabbar {
+            height: 60px;
+            background: var(--card-bg);
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        .tabbar button {
+            flex: 1;
+            border: none;
+            background: none;
+            font-size: 14px;
+            color: var(--text-sub);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .tabbar button.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, .4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            width: var(--content-width);
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-content h2 {
+            margin: 0 0 10px;
+            font-size: 16px;
+            color: var(--accent);
+        }
+
+        .modal-content p {
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-content button {
+            margin-top: 12px;
+            padding: 10px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            border-radius: var(--radius);
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone">
+        <header id="nav-title">今日の成功体験を記録しよう</header>
+        <main>
+            <!-- 書く -->
+            <section id="write" class="active">
+                <div class="container">
+                    <div class="today-title" id="today-title"></div>
+                    <div class="today-date" id="today-date"></div>
+
+                    <form id="diary-form" class="input-wrap">
+                        <textarea id="diary-input" placeholder="今日の成功体験を記録しよう…" required></textarea>
+
+                        <!-- 音声入力 UI -->
+                        <div class="editor-toolbar">
+                            <button type="button" id="mic-btn" class="mic-btn" aria-pressed="false">🎙️ 音声入力</button>
+                            <div id="mic-status" class="mic-status"></div>
+                        </div>
+
+                        <button type="submit" class="submit">保存</button>
+                    </form>
+
+                    <!-- 可視化カウント -->
+                    <div class="count-card" aria-live="polite">
+                        <div class="count-title">これまでの成功回数</div>
+                        <div id="count-number" class="count-number">0</div>
+                        <div id="count-sub" class="count-sub">いい感じ！これからも成功体験を増やそう！</div>
+                        <div class="count-message">🌱 成功体験を増やそう！</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 振り返り -->
+            <section id="list">
+                <div class="month-tabs" id="month-tabs"></div>
+                <ul id="diary-list"></ul>
+            </section>
+        </main>
+
+        <nav class="tabbar">
+            <button id="write-tab" class="active">✏️<span>書く</span></button>
+            <button id="list-tab">📖<span>振り返り</span></button>
+        </nav>
+
+        <!-- モーダル -->
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <h2 id="modal-date"></h2>
+                <p id="modal-text"></p>
+                <button id="modal-close">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const navTitle = document.getElementById("nav-title");
+        const writeTab = document.getElementById("write-tab");
+        const listTab = document.getElementById("list-tab");
+        const writeSection = document.getElementById("write");
+        const listSection = document.getElementById("list");
+        const form = document.getElementById("diary-form");
+        const input = document.getElementById("diary-input");
+        const list = document.getElementById("diary-list");
+        const todayTitle = document.getElementById("today-title");
+        const todayDate = document.getElementById("today-date");
+        const modal = document.getElementById("modal");
+        const modalDate = document.getElementById("modal-date");
+        const modalText = document.getElementById("modal-text");
+        const modalClose = document.getElementById("modal-close");
+        const monthTabs = document.getElementById("month-tabs");
+
+        const countNumber = document.getElementById("count-number");
+        const countSub = document.getElementById("count-sub");
+
+        // 音声入力
+        const micBtn = document.getElementById("mic-btn");
+        const micStatus = document.getElementById("mic-status");
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        let recognizer = null;
+        let listening = false;
+
+        // 今日の日付
+        const now = new Date();
+        todayTitle.textContent = now.toLocaleDateString("ja-JP", { weekday: "long" });
+        todayDate.textContent = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+
+        // 月タブ
+        const months = Array.from({ length: 12 }, (_, i) => i + 1);
+        let currentMonth = now.getMonth() + 1;
+        months.forEach(m => {
+            const tab = document.createElement("div");
+            tab.textContent = `${m}月`;
+            tab.className = "month-tab" + (m === currentMonth ? " active" : "");
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".month-tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                renderList(m);
+            });
+            monthTabs.appendChild(tab);
+        });
+        setTimeout(() => {
+            const active = document.querySelector(".month-tab.active");
+            if (active) {
+                monthTabs.scrollLeft = Math.max(0, active.offsetLeft - monthTabs.clientWidth / 2 + active.clientWidth / 2);
+            }
+        }, 50);
+
+        // ローカルストレージ
+        const saved = JSON.parse(localStorage.getItem("diaryRecords")) || [];
+        // 互換: month / iso を補完
+        saved.forEach(r => {
+            const d = new Date(r.iso || r.date);
+            r.month = d.getMonth() + 1;
+            if (!r.iso || isNaN(new Date(r.iso))) {
+                r.iso = toISODate(d);
+            }
+        });
+        persist();
+
+        // タブ切替
+        writeTab.addEventListener("click", () => switchTab("write", "日記を書く"));
+        listTab.addEventListener("click", () => {
+            switchTab("list", "振り返り");
+            renderList(currentMonth);
+        });
+        function switchTab(tab, title) {
+            navTitle.textContent = title;
+            writeTab.classList.toggle("active", tab === "write");
+            listTab.classList.toggle("active", tab === "list");
+            writeSection.classList.toggle("active", tab === "write");
+            listSection.classList.toggle("active", tab === "list");
+        }
+
+        // 成功回数の可視化（ユニークな日数カウント）
+        function updateCounts() {
+            const uniqueDays = new Set(saved.map(r => r.iso));
+            const totalDays = uniqueDays.size;
+            countNumber.textContent = String(totalDays);
+            countSub.textContent = totalDays === 0
+                ? "最初の1日目を記録してみましょう"
+                : "";
+        }
+        updateCounts();
+
+        // 音声入力（Web Speech API）
+        if (SR) {
+            recognizer = new SR();
+            recognizer.lang = "ja-JP";
+            recognizer.interimResults = true;
+            recognizer.continuous = true;
+
+            recognizer.onstart = () => {
+                listening = true;
+                micBtn.classList.add("active");
+                micBtn.setAttribute("aria-pressed", "true");
+                micStatus.textContent = "音声入力中… はっきり話してください";
+            };
+            recognizer.onend = () => {
+                listening = false;
+                micBtn.classList.remove("active");
+                micBtn.setAttribute("aria-pressed", "false");
+                micStatus.textContent = "";
+            };
+            recognizer.onresult = (e) => {
+                let finalTranscript = "";
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    const res = e.results[i];
+                    if (res.isFinal) finalTranscript += res[0].transcript;
+                }
+                if (finalTranscript) {
+                    insertTextAtCaret(finalTranscript.trim());
+                }
+            };
+            recognizer.onerror = (e) => {
+                micStatus.textContent = `音声入力エラー: ${e.error}`;
+            };
+        } else {
+            micBtn.disabled = true;
+            micStatus.textContent = "このブラウザでは音声入力が利用できません";
+        }
+
+        micBtn.addEventListener("click", () => {
+            if (!recognizer) return;
+            if (!listening) {
+                try { recognizer.start(); } catch { }
+            } else {
+                try { recognizer.stop(); } catch { }
+            }
+        });
+
+        function insertTextAtCaret(text) {
+            if (!text) return;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const before = input.value.slice(0, start);
+            const after = input.value.slice(end);
+            const needsNL = before && !before.endsWith("\n");
+            const insert = (needsNL ? "\n" : "") + text;
+            input.value = before + insert + after;
+            const newPos = before.length + insert.length;
+            input.setSelectionRange(newPos, newPos);
+            input.dispatchEvent(new Event("input"));
+        }
+
+        // 保存
+        form.addEventListener("submit", e => {
+            e.preventDefault();
+            const normalized = input.value
+                .replace(/\r\n/g, "\n")
+                .split("\n")
+                .map(line => line.trimEnd())
+                .join("\n")
+                .trim();
+
+            if (normalized) {
+                const dateObj = new Date();
+                const record = {
+                    text: normalized,
+                    date: dateObj.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "long" }),
+                    month: dateObj.getMonth() + 1,
+                    iso: toISODate(dateObj)
+                };
+                saved.push(record);
+                persist();
+                addItem(record);
+                input.value = ""; // 次の入力に備えてクリア
+                input.placeholder = "今日の成功体験を記録しよう…";
+                switchTab("list", "振り返り");
+                renderList(currentMonth);
+                updateCounts();
+            }
+        });
+
+        // カード追加
+        function addItem(record) {
+            const li = document.createElement("li");
+            const preview = record.text.length > 50 ? record.text.slice(0, 50) + "..." : record.text;
+            li.innerHTML = `<div>${escapeHTML(preview)}</div><div class="date">${escapeHTML(record.date)}</div>`;
+            li.addEventListener("click", () => {
+                modal.style.display = "flex";
+                modalDate.textContent = record.date;
+                modalText.textContent = record.text;
+            });
+            list.prepend(li);
+        }
+
+        // モーダル制御
+        modalClose.addEventListener("click", () => modal.style.display = "none");
+        modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = "none"; });
+
+        // 月ごと表示
+        function renderList(month) {
+            list.innerHTML = "";
+            saved.filter(r => r.month === month).forEach(addItem);
+        }
+
+        // 起動時
+        renderList(currentMonth);
+
+        // ユーティリティ
+        function persist() {
+            localStorage.setItem("diaryRecords", JSON.stringify(saved));
+        }
+        function toISODate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const da = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${da}`;
+        }
+        function escapeHTML(s) {
+            return s.replace(/[&<>"']/g, (c) => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }[c]));
+        }
+    </script>
+</body>
+
+</html>
